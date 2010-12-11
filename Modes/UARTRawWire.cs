@@ -6,12 +6,12 @@ using System.IO.Ports;
 
 namespace BusPirateLibCS.Modes
 {
-	public class RawWire : Mode
+	public class UART : Mode
 	{
 
 		BusPiratePipe root;
 
-		public RawWire(BusPiratePipe root)
+		public UART(BusPiratePipe root)
 		{
 			this.root = root;
 		}
@@ -21,8 +21,8 @@ namespace BusPirateLibCS.Modes
 			if (root.IsInExclusiveMode())
 				throw new InvalidOperationException("Already in another mode");
 			root.EnterExclusiveMode();
-			root.WriteByte(0x05);
-			root.ExpectReadText("RAW1");
+			root.WriteByte(0x03);
+			root.ExpectReadText("ARTx");
 		}
 
 		public void ExitMode()
@@ -31,17 +31,6 @@ namespace BusPirateLibCS.Modes
 			root.ExitExclusiveMode();
 		}
 
-		public void I2Cstart()
-		{
-			root.WriteByte(0x02 | 0);
-			root.ExpectReadByte(0x01);
-		}
-
-		public void I2Cstop()
-		{
-			root.WriteByte(0x02 | 1);
-			root.ExpectReadByte(0x01);
-		}
 
 		private bool cs = false;
 
@@ -53,56 +42,12 @@ namespace BusPirateLibCS.Modes
 			}
 			set
 			{
-				root.WriteByte((byte)(0x04 | (value ? 1 : 0)));
-				root.ExpectReadByte(0x01);
+				
 				cs = value;
+				configPins();
 			}
 		}
 
-		public byte ReadByte()
-		{
-			root.WriteByte(0x06);
-			return root.ReadByte();
-		}
-
-		public bool ReadBit()
-		{
-			root.WriteByte(0x07);
-			return root.ReadByte() > 0;
-		}
-
-		public bool InputPin
-		{
-			get
-			{
-				root.WriteByte(0x08);
-				return root.ReadByte() > 0;
-			}
-		}
-
-		public void ClockTick()
-		{
-			root.WriteByte(0x9);
-			root.ExpectReadByte(0x01);
-		}
-
-		public bool ClockPin
-		{
-			set
-			{
-				root.WriteByte((byte)(0x0A | (value ? 1 : 0)));
-				root.ExpectReadByte(0x01);
-			}
-		}
-
-		public bool OutputPin
-		{
-			set
-			{
-				root.WriteByte((byte)(0x0C | (value ? 1 : 0)));
-				root.ExpectReadByte(0x01);
-			}
-		}
 
 		public void WriteBulk(byte[] data) {
 			if (data.Length > 16 || data.Length < 1)
@@ -154,24 +99,6 @@ namespace BusPirateLibCS.Modes
 			}
 		}
 
-		public enum Speed : int
-		{
-			s5khz = 0,
-			s50khz = 1,
-			s100khz = 2,
-			s400khz = 3
-		}
-
-		private Speed speed = Speed.s50khz;
-		public Speed SpeedMode
-		{
-			get { return speed; }
-			set {
-				root.WriteByte((byte)(0x60 | (int)value));
-				root.ExpectReadByte(0x01);
-				speed = value;
-			}
-		}
 
 		public void ConfigPins(bool power, bool pullups, bool aux, bool cs)
 		{
@@ -197,21 +124,109 @@ namespace BusPirateLibCS.Modes
 			root.ExpectReadByte(0x01);
 		}
 
-		bool lsbFirst = false;
+		bool readEnabled = false;
 
-		public void ConfigProtocol(bool activeOutput, bool threeWire, bool LSBfirst)
+		public bool ReadWaiting
 		{
-			this.lsbFirst = LSBfirst;
+			get
+			{
+				return root.ReadWaiting;
+			}
+		}
+
+		public bool ReadEnabled { 
+			get {
+				return readEnabled;
+			}
+			set
+			{
+				root.WriteByte((byte)(0x02 | (value ? 0 : 1)));
+				root.ExpectReadByte(0x01);
+				readEnabled = value;
+			}
+		}
+
+		public enum Parity
+		{
+			None = 0,
+			Even = 1,
+			Odd = 2,
+			NineBit = 3
+		}
+
+		public enum StopBits
+		{
+			One = 0,
+			Two = 1
+		}
+
+		public enum RXIdle {
+			High = 0,
+			Low = 1
+		}
+
+		public void ConfigProtocol(bool activeOutput = false, Parity parity= Parity.None, StopBits stopbits = StopBits.One, RXIdle rxIdle = RXIdle.High)
+		{
 			byte v = 0x80;
-			if (activeOutput) v |= 0x08;
-			if (threeWire) v |= 0x04;
-			if (LSBfirst) v |= 0x02;
+			if (activeOutput) v |= 0x10;
+			v |= (byte)((int)parity << 2);
+			v |= (byte)((int)stopbits << 1);
+			v |= (byte)rxIdle;
 			root.WriteByte(v);
+			root.ExpectReadByte(0x01);
+			
+		}
+
+		public enum UARTSpeed {
+			bps300 = 0,
+			bps1200 = 1,
+			bps2400 = 2,
+			bps4800 = 3,
+			bps9600 = 4,
+			bps19200 = 5,
+			bps31250 = 6,
+			MIDI = bps31250,
+			bps38400 = 7,
+			bps57600 = 8,
+			bps115200 = 9
+		}
+
+		public void SetSpeed(UARTSpeed speed)
+		{
+			root.WriteByte((byte)(0x60 | (byte)speed));
 			root.ExpectReadByte(0x01);
 		}
 
+		public void SetSpeed(short BRG)
+		{
+			root.WriteByte(0x07);
+			root.WriteByte((byte)(BRG >> 8));
+			root.WriteByte((byte)(BRG & 0xff));
+			
+			root.ExpectReadByte(0x01);
+			root.ExpectReadByte(0x01);
+			root.ExpectReadByte(0x01);
+			
+		}
 
+		public byte ReadByte()
+		{
+			if (!ReadEnabled)
+				throw new InvalidOperationException("Enable reads first");
 
+			return root.ReadByte();
+		}
+
+		public void Read(byte[] buffer, int offset, int length)
+		{
+			if (!ReadEnabled)
+				throw new InvalidOperationException("Enable reads first");
+			root.Read(buffer, offset, length);
+
+		}
+
+		
+		
 
 		#region IDisposable Members
 
@@ -222,19 +237,5 @@ namespace BusPirateLibCS.Modes
 
 		#endregion
 
-		public void WriteBit(byte b)
-		{
-			OutputPin = b > 0;
-			ClockTick();
-		}
-
-		public void WriteBits(int bits, int number)
-		{
-			for (int i = 0; i < number; i++)
-			{
-				int j = lsbFirst ? i : number - i - 1;
-				WriteBit((byte)((bits >> j) & 0x01));
-			}
-		}
 	}
 }
