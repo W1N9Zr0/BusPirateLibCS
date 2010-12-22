@@ -104,6 +104,17 @@ namespace BusPirateLibCS.Modes
 			}
 		}
 
+		public void WriteByte(byte data)
+		{
+			//root.WriteByte(0x10);
+			//root.ExpectReadByte(0x01);
+
+			//root.WriteByte(data);
+			//root.ExpectReadByte(0x01);
+
+			WriteBits(data, 8);
+		}
+
 		public void WriteBulk(byte[] data) {
 			if (data.Length > 16 || data.Length < 1)
 				throw new ArgumentOutOfRangeException("data", "Number of bytes must be between 1 and 16");
