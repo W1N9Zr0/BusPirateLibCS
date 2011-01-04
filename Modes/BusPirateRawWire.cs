@@ -221,6 +221,40 @@ namespace BusPirateLibCS.Modes
 			root.ExpectReadByte(0x01);
 		}
 
+		public enum PICMode : byte
+		{
+			PIC614 = 0,
+			PIC416,
+			PIC424,
+
+		}
+
+		public PICMode PicMode { 
+			set {
+				root.WriteByte(0xa0);
+				root.WriteByte((byte)value);
+				root.ExpectReadByte(0x01);
+			}
+
+		}
+
+		public void picWrite(byte command, byte a, byte b, int delay)
+		{
+			root.WriteByte(0xa4);
+			root.WriteByte((byte)(command | (delay << 6)));
+			root.WriteByte(a);
+			root.WriteByte(b);
+			root.ExpectReadByte(1);
+		}
+
+		public byte picRead(byte command)
+		{
+			root.WriteByte(0xa5);
+			root.WriteByte(command);
+
+			return root.ReadByte();
+		}
+
 
 
 
