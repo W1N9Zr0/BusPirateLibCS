@@ -106,13 +106,12 @@ namespace BusPirateLibCS.Modes
 
 		public void WriteByte(byte data)
 		{
-			//root.WriteByte(0x10);
-			//root.ExpectReadByte(0x01);
+			root.WriteByte(0x10);
+			root.ExpectReadByte(0x01);
 
-			//root.WriteByte(data);
-			//root.ExpectReadByte(0x01);
+			root.WriteByte(data);
+			root.ExpectReadByte(0x01);
 
-			WriteBits(data, 8);
 		}
 
 		public void WriteBulk(byte[] data) {
