@@ -209,7 +209,7 @@ namespace BusPirateLibCS.Modes
 
 		bool lsbFirst = false;
 
-		public void ConfigProtocol(bool activeOutput, bool threeWire, bool LSBfirst)
+		public void ConfigProtocol(bool activeOutput = false, bool threeWire = false, bool LSBfirst = true)
 		{
 			this.lsbFirst = LSBfirst;
 			byte v = 0x80;

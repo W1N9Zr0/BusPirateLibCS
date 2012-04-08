@@ -126,7 +126,7 @@ namespace BusPirateLibCS.Util
 			}
 		}
 
-		public void Read(byte[] buffer, int offset, int length)
+		public int Read(byte[] buffer, int offset, int length)
 		{
 			
 			expected.Enqueue(MAGIC_WAIT_CONSTANT);
@@ -134,13 +134,13 @@ namespace BusPirateLibCS.Util
 			while (expected.Count == 0 || (expected.Count > 0 && expected.Peek() != MAGIC_WAIT_CONSTANT))
 				sleep();
 
+			int read = 0;
 
 			lock (expectedLock)
 			{
 
 				try
 				{
-					int read = 0;
 					while (read < length - offset)
 					{
 						if (read > 0) sleep();
@@ -149,13 +149,14 @@ namespace BusPirateLibCS.Util
 				}
 				catch (TimeoutException ex)
 				{
-					throw ex;
+					
 				}
 				finally
 				{
 					expected.Dequeue();
 				}
 			}
+			return read;
 		}
 
 		private void sleep()

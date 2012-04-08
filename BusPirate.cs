@@ -82,9 +82,15 @@ namespace BusPirateLibCS
 
 				port.WriteByte(CMD_RESET);
 				Wait(5);
+				int read = 0;
+					
 				try
 				{
-					port.Read(buffer, 0, buffer.Length);
+					read += port.Read(buffer, read, buffer.Length - read);
+					if (read < buffer.Length)
+						throw new TimeoutException();
+
+					read = 0;
 					for (int i = 0; i < buffer.Length; i++)
 					{
 						if (buffer[i] != modeOnString[i])
@@ -228,8 +234,8 @@ namespace BusPirateLibCS
 			return port.ReadByte();
 		}
 
-		public void Read(byte[] buffer, int offset, int length) {
-			port.Read(buffer, offset, length);
+		public int Read(byte[] buffer, int offset, int length) {
+			return port.Read(buffer, offset, length);
 		}
 
 		public void ExpectReadByte(byte b)

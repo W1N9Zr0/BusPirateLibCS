@@ -22,7 +22,7 @@ namespace BusPirateLibCS.Modes
 				throw new InvalidOperationException("Already in another mode");
 			root.EnterExclusiveMode();
 			root.WriteByte(0x03);
-			root.ExpectReadText("ARTx");
+			root.ExpectReadText("ART1");
 		}
 
 		public void ExitMode()
