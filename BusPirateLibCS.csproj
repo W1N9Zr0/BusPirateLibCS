@@ -101,6 +101,7 @@
     <Compile Include="BusPirate.cs" />
     <Compile Include="BusPiratePipe.cs" />
     <Compile Include="Modes\BusPirateRawWire.cs" />
+    <Compile Include="Modes\SPI.cs" />
     <Compile Include="Modes\UARTRawWire.cs" />
     <Compile Include="Modes\Mode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
