@@ -25,6 +25,11 @@ namespace BusPirateLibCS.Modes
 			root.ExpectReadText("SPI1");
 		}
 
+		public SPISniffer Sniffer()
+		{
+			return new SPISniffer(this, root);
+		}
+
 		public void ExitMode()
 		{
 			root.WriteByte(0x00);
@@ -109,8 +114,6 @@ namespace BusPirateLibCS.Modes
 			root.WriteByte(v);
 			root.ExpectReadByte(0x01);
 		}
-
-		bool lsbFirst = false;
 
 		public void ConfigProtocol(bool activeOutput = false, bool idle = false, bool edge = true, bool sample = false)
 		{
