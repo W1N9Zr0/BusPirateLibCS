@@ -147,7 +147,7 @@ namespace BusPirateLibCS.Util
 						read += myPort.Read(buffer, offset + read, length - read);
 					}
 				}
-				catch (TimeoutException ex)
+				catch (TimeoutException)
 				{
 					
 				}
@@ -161,7 +161,7 @@ namespace BusPirateLibCS.Util
 
 		private void sleep()
 		{
-			wait(1);
+			wait(0);
 		}
 
 		public int ReadTimeout
@@ -180,9 +180,19 @@ namespace BusPirateLibCS.Util
 		public void ExpectReadByte(byte b)
 		{
 #if DEBUG_SERIAL
-			var result = myPort.ReadByte();
-			if (b != result)
-				throw new Exception("FLAIL!");
+			while (true)
+			{
+				try
+				{
+					var result = myPort.ReadByte();
+					if (b != result)
+						throw new Exception("FLAIL!");
+					return;
+				} catch (TimeoutException)
+				{
+					// retry
+				}
+			}
 #else
 			expected.Enqueue(b);
 #endif

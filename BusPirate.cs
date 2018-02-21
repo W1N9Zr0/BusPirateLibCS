@@ -48,12 +48,12 @@ namespace BusPirateLibCS
 		public const Pins PINS_OUTPUTS = Pins.POWER | Pins.PULLUP | Pins.AUX | Pins.CS | Pins.MISO | Pins.CLK | Pins.MOSI;
 		public const Pins PINS_NONE = 0;
 
-		private ExpectingSerialPort port;
+		public ExpectingSerialPort port;
 
 		public BusPirate(SerialPort port)
 		{
 
-			port.BaudRate = 115200;
+			//port.BaudRate = 115200;
 			port.Parity = Parity.None;
 			port.DataBits = 8;
 			port.StopBits = StopBits.One;
@@ -73,7 +73,7 @@ namespace BusPirateLibCS
 			byte[] modeOnString = Encoding.ASCII.GetBytes("BBIO1");
 			byte[] buffer = new byte[modeOnString.Length];
 			int oldTimeout = port.ReadTimeout;
-			port.ReadTimeout = 5;
+			port.ReadTimeout = 30;
 			port.Write(zero, 0, zero.Length);
 			Wait(10);
 			port.ClearQueue();
@@ -90,7 +90,7 @@ namespace BusPirateLibCS
 					if (read < buffer.Length)
 						throw new TimeoutException();
 
-					read = 0;
+					read = 0; 
 					for (int i = 0; i < buffer.Length; i++)
 					{
 						if (buffer[i] != modeOnString[i])
